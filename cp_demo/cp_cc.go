@@ -124,6 +124,8 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 
 func (t *SimpleChaincode) availableCPInventory(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 
+	fmt.Println("availableCPInventory called")
+
 	var inventory []CP
 	var cp CP
 	var err error
