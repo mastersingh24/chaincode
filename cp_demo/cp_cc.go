@@ -110,6 +110,7 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 	var err error
 	numAccounts, err := strconv.Atoi(args[0])
 	if err != nil {
+		fmt.Println("error creating accounts with input")
 		return nil, errors.New("createAccounts accepts a single integer argument")
 	}
 	//create a bunch of accounts
@@ -119,18 +120,23 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		var prefix string
 		suffix := "000A"
 		if counter < 10 {
-			prefix = string(counter) + "0" + suffix
+			prefix = strconv.Itoa(counter) + "0" + suffix
 		} else {
-			prefix = string(counter) + suffix
+			prefix = strconv.Itoa(counter) + suffix
 		}
-		account = Account{ID: "company" + string(counter), Prefix: prefix}
+		account = Account{ID: "company" + strconv.Itoa(counter), Prefix: prefix}
 		accountBytes, err := json.Marshal(&account)
 		if err != nil {
+			fmt.Println("error creating account" + account.ID)
 			return nil, errors.New("Error creating account " + account.ID)
 		}
 		err = stub.PutState(accountPrefix+account.ID, accountBytes)
 		counter++
+		fmt.Println("created account" + accountPrefix + account.ID)
 	}
+	var blank []string
+	blankBytes, _ := json.Marshal(&blank)
+	err = stub.PutState("PaperKeys", blankBytes)
 
 	fmt.Println("Accounts created")
 	return nil, nil
@@ -168,6 +174,7 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	*/
 	//need one arg
 	if len(args) != 1 {
+		fmt.Println("error invalid arguments")
 		return nil, errors.New("Incorrect number of arguments. Expecting commercial paper record")
 	}
 
@@ -178,6 +185,7 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	fmt.Println("Unmarshalling CP");
 	err = json.Unmarshal([]byte(args[0]), &cp)
 	if err != nil {
+		fmt.Println("error invalid paper issue")
 		return nil, errors.New("Invalid commercial paper issue")
 	}
 
@@ -203,8 +211,8 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	cp.Owners = append(cp.Owners, owner)
 
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
-
 	if err != nil {
+		fmt.Println("Error generating cusip");
 		return nil, errors.New("Error generating CUSIP")
 	}
 
@@ -212,10 +220,12 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	cp.CUSIP = account.Prefix + suffix
 	cpBytes, err := json.Marshal(&cp)
 	if err != nil {
+		fmt.Println("Error unmarshel cp");
 		return nil, errors.New("Error issuing commercial paper")
 	}
 	err = stub.PutState(cpPrefix+cp.CUSIP, cpBytes)
 	if err != nil {
+		fmt.Println("Error issuing paper");
 		return nil, errors.New("Error issuing commercial paper")
 	}
 	
@@ -223,11 +233,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	fmt.Println("Getting Paper Keys");
 	keysBytes, err := stub.GetState("PaperKeys")
 	if err != nil {
+		fmt.Println("Error retrieving paper keys");
 		return nil, errors.New("Error retrieving paper keys")
 	}
 	var keys []string
 	err = json.Unmarshal(keysBytes, &keys)
 	if err != nil {
+		fmt.Println("Error unmarshel keys");
 		return nil, errors.New("Error unmarshalling paper keys ")
 	}
 	
@@ -235,11 +247,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	keys = append(keys, cpPrefix+cp.CUSIP);
 	keysBytesToWrite, err := json.Marshal(&keys)
 	if err != nil {
+		fmt.Println("Error marshalling keys");
 		return nil, errors.New("Error marshalling the keys")
 	}
 	fmt.Println("Put state on PaperKeys");
 	err = stub.PutState("PaperKeys", keysBytesToWrite)
 	if err != nil {
+		fmt.Println("Error writting keys back");
 		return nil, errors.New("Error writing the keys back")
 	}
 
@@ -473,8 +487,8 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 }
 
 func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-	// Handle different functions
-	// Handle different functions
+	fmt.Println("run is running " + function)
+	
 	if function == "issueCommercialPaper" {
 		fmt.Println("Firing issueCommercialPaper");
 		//Create an asset with some value
