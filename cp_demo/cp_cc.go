@@ -200,19 +200,20 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	cp.Owners = append(cp.Owners, owner)
 
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
-
 	if err != nil {
+		fmt.Println("Error generating cusip");
 		return nil, errors.New("Error generating CUSIP")
 	}
 
-	fmt.Println("Error Unmarshalling accountBytes");
 	cp.CUSIP = account.Prefix + suffix
 	cpBytes, err := json.Marshal(&cp)
 	if err != nil {
+		fmt.Println("Error unmarshel cp");
 		return nil, errors.New("Error issuing commercial paper")
 	}
 	err = stub.PutState(cpPrefix+cp.CUSIP, cpBytes)
 	if err != nil {
+		fmt.Println("Error issuing paper");
 		return nil, errors.New("Error issuing commercial paper")
 	}
 	
@@ -220,11 +221,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	fmt.Println("Getting Paper Keys");
 	keysBytes, err := stub.GetState("PaperKeys")
 	if err != nil {
+		fmt.Println("Error retrieving paper keys");
 		return nil, errors.New("Error retrieving paper keys")
 	}
 	var keys []string
 	err = json.Unmarshal(keysBytes, &keys)
 	if err != nil {
+		fmt.Println("Error unmarshel keys");
 		return nil, errors.New("Error unmarshalling paper keys ")
 	}
 	
@@ -232,11 +235,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	keys = append(keys, cpPrefix+cp.CUSIP);
 	keysBytesToWrite, err := json.Marshal(&keys)
 	if err != nil {
+		fmt.Println("Error marshalling keys");
 		return nil, errors.New("Error marshalling the keys")
 	}
 	fmt.Println("Put state on PaperKeys");
 	err = stub.PutState("PaperKeys", keysBytesToWrite)
 	if err != nil {
+		fmt.Println("Error writting keys back");
 		return nil, errors.New("Error writing the keys back")
 	}
 
