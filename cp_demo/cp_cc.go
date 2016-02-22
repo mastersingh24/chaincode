@@ -512,7 +512,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	//need one arg
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting ......")
 	}
 
