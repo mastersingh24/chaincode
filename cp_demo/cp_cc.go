@@ -113,6 +113,7 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 			return nil, errors.New("Error creating account " + account.ID)
 		}
 		err = stub.PutState(accountPrefix+account.ID, accountBytes)
+		fmt.Printf("created account:\n%s\n", string(accountBytes))
 		counter++
 	}
 
