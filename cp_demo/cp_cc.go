@@ -92,7 +92,7 @@ type Account struct {
 	ID          string  `json:"id"`
 	Prefix      string  `json:"prefix"`
 	CashBalance float64 `json:"cashBalance"`
-	Assets      []CP    `json:"assets"`
+	AssetsIds   []string `json:"assetIds"`
 }
 
 func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
@@ -167,6 +167,7 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	var err error
 	var account Account
 
+	fmt.Printf("Unmarshalling CP");
 	err = json.Unmarshal([]byte(args[0]), &cp)
 	if err != nil {
 		return nil, errors.New("Invalid commercial paper issue")
@@ -174,12 +175,15 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 
 	//generate the CUSIP
 	//get account prefix
-	accountBytes, err := stub.GetState(accountPrefix + cp.Issuer)
+	fmt.Printf("Getting state of - " + accountPrefix + cp.Issuer);
+	accountBytes, err := stub.GetState(accountPrefix + cp.Issuer);
 	if err != nil {
+		fmt.Printf("Error Getting state of - " + accountPrefix + cp.Issuer);
 		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
 	err = json.Unmarshal(accountBytes, &account)
 	if err != nil {
+		fmt.Printf("Error Unmarshalling accountBytes");
 		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
 
@@ -188,6 +192,8 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	if err != nil {
 		return nil, errors.New("Error generating CUSIP")
 	}
+
+	fmt.Printf("Error Unmarshalling accountBytes");
 	cp.CUSIP = account.Prefix + suffix
 	cpBytes, err := json.Marshal(&cp)
 	if err != nil {
@@ -199,6 +205,7 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	}
 	
 	// Update the paper keys by adding the new key
+	fmt.Printf("Getting Paper Keys");
 	keysBytes, err := stub.GetState("PaperKeys")
 	if err != nil {
 		return nil, errors.New("Error retrieving paper keys")
@@ -209,11 +216,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 		return nil, errors.New("Error unmarshalling paper keys ")
 	}
 	
+	fmt.Printf("Appending the new key to Paper Keys");
 	keys = append(keys, cpPrefix+cp.CUSIP);
 	keysBytesToWrite, err := json.Marshal(&keys)
 	if err != nil {
 		return nil, errors.New("Error marshalling the keys")
 	}
+	fmt.Printf("Put state on PaperKeys");
 	err = stub.PutState("PaperKeys", keysBytesToWrite)
 	if err != nil {
 		return nil, errors.New("Error writing the keys back")
@@ -254,6 +263,27 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 	}	
 	
 	return allCPs, nil
+}
+
+
+// Still working on this one
+func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+	/*		0
+		json
+	  	{
+			  "CUSIP": "",
+			  "fromCompany":"",
+			  "toCompany":"",
+			  "
+
+		}
+	*/
+	//need one arg
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting commercial paper record")
+	}
+	
+	return nil, nil;
 }
 
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
