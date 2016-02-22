@@ -69,6 +69,13 @@ func msToTime(ms string) (time.Time, error) {
 		(msInt%millisPerSecond)*nanosPerMillisecond), nil
 }
 
+
+
+type Owner struct {
+	Company string    `json:"company"`
+	Quantity int      `json:"quantity"`
+}
+
 type CP struct {
 	CUSIP     string  `json:"cusip"`
 	Ticker    string  `json:"ticker"`
@@ -76,7 +83,7 @@ type CP struct {
 	Qty       int     `json:"qty"`
 	Discount  float64 `json:"discount"`
 	Maturity  int     `json:"maturity"`
-	Owner     string  `json:"owner"`
+	Owners    []Owner `json:"owner"`
 	Issuer    string  `json:"issuer"`
 	IssueDate string  `json:"issueDate"`
 }
@@ -132,7 +139,20 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 			"qty": 10,
 			"discount": 7.5,
 			"maturity": 30,
-			"owner": "company1",
+			"owners": [ // This one is not required
+				{
+					"company": "company1",
+					"quantity": 5
+				},
+				{
+					"company": "company3",
+					"quantity": 3
+				},
+				{
+					"company": "company4",
+					"quantity": 2
+				}
+			],				
 			"issuer":"company2",
 			"issueDate":"1456161763790"  (current time in milliseconds as a string)
 
@@ -154,13 +174,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 
 	//generate the CUSIP
 	//get account prefix
-	accountBytes, err := stub.GetState(accountPrefix + cp.Owner)
+	accountBytes, err := stub.GetState(accountPrefix + cp.Issuer)
 	if err != nil {
-		return nil, errors.New("Error retrieving account " + cp.Owner)
+		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
 	err = json.Unmarshal(accountBytes, &account)
 	if err != nil {
-		return nil, errors.New("Error retrieving account " + cp.Owner)
+		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
 
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
@@ -177,10 +197,63 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	if err != nil {
 		return nil, errors.New("Error issuing commercial paper")
 	}
+	
+	// Update the paper keys by adding the new key
+	keysBytes, err := stub.GetState("PaperKeys")
+	if err != nil {
+		return nil, errors.New("Error retrieving paper keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		return nil, errors.New("Error unmarshalling paper keys ")
+	}
+	
+	keys = append(keys, cpPrefix+cp.CUSIP);
+	keysBytesToWrite, err := json.Marshal(&keys)
+	if err != nil {
+		return nil, errors.New("Error marshalling the keys")
+	}
+	err = stub.PutState("PaperKeys", keysBytesToWrite)
+	if err != nil {
+		return nil, errors.New("Error writing the keys back")
+	}
 
 	fmt.Printf("Issue commercial paper %+v\n", cp)
 	return nil, nil
 
+}
+
+
+func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
+	
+	var allCPs []CP
+	
+	// Get list of all the keys
+	keysBytes, err := stub.GetState("PaperKeys")
+	if err != nil {
+		return nil, errors.New("Error retrieving paper keys")
+	}
+	var keys []string
+	err = json.Unmarshal(keysBytes, &keys)
+	if err != nil {
+		return nil, errors.New("Error unmarshalling paper keys")
+	}
+
+	// Get all the cps
+	for _, value := range keys {
+		cpBytes, err := stub.GetState(value);
+		
+		var cp CP
+		err = json.Unmarshal(cpBytes, &cp)
+		if err != nil {
+			return nil, errors.New("Error retrieving cp " + value)
+		}
+		
+		allCPs = append(allCPs, cp)
+	}	
+	
+	return allCPs, nil
 }
 
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
