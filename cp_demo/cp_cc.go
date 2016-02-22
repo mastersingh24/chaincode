@@ -324,6 +324,7 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	// Handle different functions
 	// Handle different functions
+	fmt.Printf("Firing fun " + function);
 	if function == "issueCommercialPaper" {
 		fmt.Printf("Firing issueCommercialPaper");
 		//Create an asset with some value
