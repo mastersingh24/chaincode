@@ -104,11 +104,11 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		var prefix string
 		suffix := "000A"
 		if counter < 10 {
-			prefix = string(counter) + "0" + suffix
+			prefix = strconv.Itoa(counter) + "0" + suffix
 		} else {
-			prefix = string(counter) + suffix
+			prefix = strconv.Itoa(counter) + suffix
 		}
-		account = Account{ID: "company" + string(counter), Prefix: prefix}
+		account = Account{ID: "company" + string(counter), Prefix: prefix, CashBalance: 10000000}
 		accountBytes, err := json.Marshal(&account)
 		if err != nil {
 			return nil, errors.New("Error creating account " + account.ID)
@@ -160,7 +160,7 @@ func (t *SimpleChaincode) availableCPInventory(stub *shim.ChaincodeStub, args []
 }
 
 func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
-
+	fmt.Println("issueCommercialPaper")
 	/*		0
 		json
 	  	{
@@ -183,29 +183,31 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	var cp CP
 	var err error
 	var account Account
-
+	fmt.Println("issueCommercialPaper")
 	err = json.Unmarshal([]byte(args[0]), &cp)
+	fmt.Printf("issueCommercialPaper request =  %+v\n", cp)
 	if err != nil {
 		return nil, errors.New("Invalid commercial paper issue")
 	}
 
 	//generate the CUSIP
 	//get account prefix
+	fmt.Printf("get account for %s\n", cp.Owner)
 	accountBytes, err := stub.GetState(accountPrefix + cp.Owner)
 	if err != nil {
-		fmt.Printf("error retrieving account:", err)
+		fmt.Println("error retrieving account:", err)
 		return nil, errors.New("Error retrieving account " + cp.Owner)
 	}
 	err = json.Unmarshal(accountBytes, &account)
 	if err != nil {
-		fmt.Printf("error retrieving account:", err)
+		fmt.Println("error retrieving account:", err)
 		return nil, errors.New("Error retrieving account " + cp.Owner)
 	}
 
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
 
 	if err != nil {
-		fmt.Printf("Error generating CUSIP:", err)
+		fmt.Println("Error generating CUSIP:", err)
 		return nil, errors.New("Error generating CUSIP")
 	}
 	cp.CUSIP = account.Prefix + suffix
