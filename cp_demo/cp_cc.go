@@ -85,7 +85,6 @@ type Account struct {
 	ID          string  `json:"id"`
 	Prefix      string  `json:"prefix"`
 	CashBalance float64 `json:"cashBalance"`
-	Assets      []CP    `json:"assets"`
 }
 
 func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
