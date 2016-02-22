@@ -280,6 +280,23 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 	return allCPs, nil
 }
 
+func GetCompany(companyID string, stub *shim.ChaincodeStub) (Account, error){
+	var company Account
+	companyBytes, err := stub.GetState(accountPrefix+companyID);
+	if err != nil {
+		fmt.Println("Account not found " + companyID)
+		return company, errors.New("Account not found " + companyID)
+	}
+
+	err = json.Unmarshal(companyBytes, &company)
+	if err != nil {
+		fmt.Println("Error unmarshalling account " + companyID)
+		return company, errors.New("Error unmarshalling account " + companyID)
+	}
+	
+	return company, nil
+}
+
 
 // Still working on this one
 func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
