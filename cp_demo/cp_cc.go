@@ -117,8 +117,43 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		counter++
 	}
 
-	fmt.Printf("Accounts created")
+	fmt.Println("Accounts created")
 	return nil, nil
+
+}
+
+func (t *SimpleChaincode) availableCPInventory(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+
+	var inventory []CP
+	var cp CP
+	var err error
+
+	//use range query to get CP - cp:00000000 - cp:ZZZZZZZZ
+	itr, err := stub.RangeQueryState(cpPrefix+"00000000", cpPrefix+"ZZZZZZZZ")
+	if err != nil {
+		return nil, errors.New("failed to get commercial paper inventory")
+	}
+
+	if itr.HasNext() {
+		cusip, cpBytes, err := itr.Next()
+		if err != nil {
+			fmt.Println("error getting commercial paper asset from inventory")
+		} else {
+			err = json.Unmarshal(cpBytes, &cp)
+			if err != nil {
+				fmt.Printf("error marshaling commercial paper asset %s as JSON", cusip)
+			} else {
+				inventory = append(inventory, cp)
+			}
+		}
+	}
+
+	inventoryBytes, err := json.Marshal(inventory)
+	if err != nil {
+		return nil, errors.New("error retrieving commercial paper inventory")
+	}
+
+	return inventoryBytes, nil
 
 }
 
