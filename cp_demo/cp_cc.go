@@ -191,16 +191,19 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	//get account prefix
 	accountBytes, err := stub.GetState(accountPrefix + cp.Owner)
 	if err != nil {
+		fmt.Printf("error retrieving account:", err)
 		return nil, errors.New("Error retrieving account " + cp.Owner)
 	}
 	err = json.Unmarshal(accountBytes, &account)
 	if err != nil {
+		fmt.Printf("error retrieving account:", err)
 		return nil, errors.New("Error retrieving account " + cp.Owner)
 	}
 
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
 
 	if err != nil {
+		fmt.Printf("Error generating CUSIP:", err)
 		return nil, errors.New("Error generating CUSIP")
 	}
 	cp.CUSIP = account.Prefix + suffix
@@ -210,6 +213,7 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	}
 	err = stub.PutState(cpPrefix+cp.CUSIP, cpBytes)
 	if err != nil {
+		fmt.Printf("Error issuing commercial paper:", err)
 		return nil, errors.New("Error issuing commercial paper")
 	}
 
@@ -224,13 +228,11 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 		return nil, errors.New("Incorrect number of arguments. Expecting ......")
 	}
 
-	bytes, err := stub.GetState(args[0])
-
-	if err != nil {
-		return nil, errors.New("Some Error happened")
+	if function == "availableCPInventory" {
+		return t.availableCPInventory(stub, args)
 	}
 
-	return bytes, nil
+	return nil, errors.New("Received unknown function query")
 }
 
 func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
@@ -241,8 +243,6 @@ func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []
 		return t.issueCommercialPaper(stub, args)
 	} else if function == "createAccounts" {
 		return t.createAccounts(stub, args)
-	} else if function == "availableCPInventory" {
-		return t.availableCPInventory(stub, args)
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
