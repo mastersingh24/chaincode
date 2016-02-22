@@ -136,7 +136,7 @@ func (t *SimpleChaincode) availableCPInventory(stub *shim.ChaincodeStub, args []
 		return nil, errors.New("failed to get commercial paper inventory")
 	}
 
-	if itr.HasNext() {
+	for itr.HasNext() {
 		cusip, cpBytes, err := itr.Next()
 		if err != nil {
 			fmt.Println("error getting commercial paper asset from inventory")
