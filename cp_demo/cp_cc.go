@@ -102,6 +102,7 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 	var err error
 	numAccounts, err := strconv.Atoi(args[0])
 	if err != nil {
+		fmt.Println("error creating accounts with input")
 		return nil, errors.New("createAccounts accepts a single integer argument")
 	}
 	//create a bunch of accounts
@@ -118,10 +119,12 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		account = Account{ID: "company" + string(counter), Prefix: prefix}
 		accountBytes, err := json.Marshal(&account)
 		if err != nil {
+			fmt.Println("error creating account" + account.ID)
 			return nil, errors.New("Error creating account " + account.ID)
 		}
 		err = stub.PutState(accountPrefix+account.ID, accountBytes)
 		counter++
+		fmt.Println("created account" + accountPrefix + account.ID)
 	}
 
 	fmt.Println("Accounts created")
