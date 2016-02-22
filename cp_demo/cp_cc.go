@@ -343,8 +343,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 			  "CUSIP": "",
 			  "fromCompany":"",
 			  "toCompany":"",
-			  "quantity": 1,
-			  "discount": 2.5 // in %
+			  "quantity": 1
 		}
 	*/
 	//need one arg
@@ -423,6 +422,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	}
 	
 	amountToBeTransferred := float64(cp.Qty) * cp.Par
+	amountToBeTransferred -= (amountToBeTransferred * cp.Discount / 100)
 	
 	// If toCompany doesn't have enough cash to buy the papers
 	if toCompany.CashBalance < amountToBeTransferred {
