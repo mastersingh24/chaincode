@@ -477,13 +477,37 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 		return nil, errors.New("Incorrect number of arguments. Expecting ......")
 	}
 
-	bytes, err := stub.GetState(args[0])
+	if args[0] == "GetAllCPs" {
+		allCPs, err := GetAllCPs(stub);
+		if err != nil {
+			return nil, err
+		} else {
+			allCPsBytes, err1 := json.Marshal(&allCPs)
+			if err1 != nil {
+				return nil, err1
+			}	
+			return allCPsBytes, nil		 
+		}
+	} else if args[0] == "GetCompany" {
+		company, err := GetCompany(args[1], stub);
+		if err != nil {
+			return nil, err
+		} else {
+			companyBytes, err1 := json.Marshal(&company)
+			if err1 != nil {
+				return nil, err1
+			}	
+			return companyBytes, nil		 
+		}
+	} else {
+		bytes, err := stub.GetState(args[0])
 
-	if err != nil {
-		return nil, errors.New("Some Error happened")
+		if err != nil {
+			return nil, errors.New("Some Error happened")
+		}
+
+		return bytes, nil		
 	}
-
-	return bytes, nil
 }
 
 func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
