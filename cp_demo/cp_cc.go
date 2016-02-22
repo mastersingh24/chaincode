@@ -360,6 +360,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 		return nil, errors.New("Invalid commercial paper issue")
 	}
 
+	fmt.Println("Getting State on CP " + tr.CUSIP)
 	cpBytes, err := stub.GetState(cpPrefix+tr.CUSIP);
 	if err != nil {
 		fmt.Println("CUSIP not found")
@@ -367,6 +368,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	}
 
 	var cp CP
+	fmt.Println("Unmarshalling CP " + tr.CUSIP)
 	err = json.Unmarshal(cpBytes, &cp)
 	if err != nil {
 		fmt.Println("Error unmarshalling cp " + tr.CUSIP)
@@ -374,12 +376,14 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	}
 
 	var fromCompany Account
+	fmt.Println("Getting State on fromCompany " + tr.FromCompany)	
 	fromCompanyBytes, err := stub.GetState(accountPrefix+tr.FromCompany);
 	if err != nil {
 		fmt.Println("Account not found " + tr.FromCompany)
 		return nil, errors.New("Account not found " + tr.FromCompany)
 	}
 
+	fmt.Println("Unmarshalling FromCompany ")
 	err = json.Unmarshal(fromCompanyBytes, &fromCompany)
 	if err != nil {
 		fmt.Println("Error unmarshalling account " + tr.FromCompany)
@@ -387,12 +391,14 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	}
 
 	var toCompany Account
+	fmt.Println("Getting State on ToCompany " + tr.ToCompany)
 	toCompanyBytes, err := stub.GetState(accountPrefix+tr.ToCompany);
 	if err != nil {
 		fmt.Println("Account not found " + tr.ToCompany)
 		return nil, errors.New("Account not found " + tr.ToCompany)
 	}
 
+	fmt.Println("Unmarshalling tocompany")
 	err = json.Unmarshal(toCompanyBytes, &toCompany)
 	if err != nil {
 		fmt.Println("Error unmarshalling account " + tr.ToCompany)
@@ -413,12 +419,16 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	if ownerFound == false {
 		fmt.Println("The company " + tr.FromCompany + "doesn't own any of this paper");
 		return nil, errors.New("The company " + tr.FromCompany + "doesn't own any of this paper");		
+	} else {
+		fmt.Println("The FromCompany does own this paper")
 	}
 	
 	// If fromCompany doesn't own enought quantity of this paper
 	if quantity < tr.Quantity {
 		fmt.Println("The company " + tr.FromCompany + "doesn't own enough of this paper");				
 		return nil, errors.New("The company " + tr.FromCompany + "doesn't own enough of this paper");				
+	} else {
+		fmt.Println("The FromCompany owns enough of this paper")
 	}
 	
 	amountToBeTransferred := float64(cp.Qty) * cp.Par
@@ -428,6 +438,8 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	if toCompany.CashBalance < amountToBeTransferred {
 		fmt.Println("The company " + tr.ToCompany + "doesn't have enough cash to purchase the papers");			
 		return nil, errors.New("The company " + tr.ToCompany + "doesn't have enough cash to purchase the papers");		
+	} else {
+		fmt.Println("The ToCompany has enough money to be transferred for this paper")
 	}
 	
 	toCompany.CashBalance -= amountToBeTransferred
@@ -436,9 +448,11 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	toOwnerFound := false
 	for _, owner := range cp.Owners {
 		if owner.Company == tr.FromCompany {
+			fmt.Println("Reducing Quantity from the FromCompany")
 			owner.Quantity -= tr.Quantity
 		}
 		if owner.Company == tr.ToCompany {
+			fmt.Println("Increasing Quantity from the ToCompany")
 			toOwnerFound = true
 			owner.Quantity += tr.Quantity
 		}
@@ -446,6 +460,7 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	
 	if toOwnerFound == false {
 		var newOwner Owner
+		fmt.Println("As ToOwner was not found, appending the owner to the CP")
 		newOwner.Quantity = tr.Quantity
 		newOwner.Company = tr.ToCompany
 		cp.Owners = append(cp.Owners, newOwner)
@@ -484,13 +499,14 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 		fmt.Println("Error marshalling the cp")
 		return nil, errors.New("Error marshalling the cp")
 	}
-	fmt.Println("Put state on fromCompany");
+	fmt.Println("Put state on CP");
 	err = stub.PutState(cpPrefix+tr.CUSIP, cpBytesToWrite)
 	if err != nil {
 		fmt.Println("Error writing the cp back")
 		return nil, errors.New("Error writing the cp back")
 	}
-		
+	
+	fmt.Println("Successfully completed Invoke");
 	return nil, nil;
 }
 
