@@ -126,6 +126,10 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		counter++
 		fmt.Println("created account" + accountPrefix + account.ID)
 	}
+	var []string blank
+	blankBytes, _ := json.Marshal(&blank)
+	err = stub.PutState("PaperKeys", blankBytes)
+
 
 	fmt.Println("Accounts created")
 	return nil, nil
