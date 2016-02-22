@@ -124,7 +124,7 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		} else {
 			prefix = strconv.Itoa(counter) + suffix
 		}
-		account = Account{ID: "company" + strconv.Itoa(counter), Prefix: prefix}
+		account = Account{ID: "company" + strconv.Itoa(counter), Prefix: prefix, CashBalance: 10000000.0}
 		accountBytes, err := json.Marshal(&account)
 		if err != nil {
 			fmt.Println("error creating account" + account.ID)
