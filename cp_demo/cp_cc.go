@@ -82,8 +82,10 @@ type CP struct {
 }
 
 type Account struct {
-	ID     string `json:"id"`
-	Prefix string `json:"prefix"`
+	ID          string  `json:"id"`
+	Prefix      string  `json:"prefix"`
+	CashBalance float64 `json:"cashBalance"`
+	Assets      []CP    `json:"assets"`
 }
 
 func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
@@ -130,8 +132,8 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 			"qty": 10,
 			"discount": 7.5,
 			"maturity": 30,
-			"owner": "10000A",
-			"issuer":"10000A",
+			"owner": "company1",
+			"issuer":"company2",
 			"issueDate":"1456161763790"  (current time in milliseconds as a string)
 
 		}
