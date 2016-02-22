@@ -241,8 +241,9 @@ func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []
 		return t.issueCommercialPaper(stub, args)
 	} else if function == "createAccounts" {
 		return t.createAccounts(stub, args)
+	} else if function == "availableCPInventory" {
+		return t.availableCPInventory(stub, args)
 	}
-
 	return nil, errors.New("Received unknown function invocation")
 }
 
