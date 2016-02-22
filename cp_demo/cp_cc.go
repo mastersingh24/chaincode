@@ -294,6 +294,20 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 	return allCPs, nil
 }
 
+func GetCP(cpid string, stub *shim.ChaincodeStub) (CP, error){
+	
+	cpBytes, err := stub.GetState(cpid);
+		
+	var cp CP
+	err = json.Unmarshal(cpBytes, &cp)
+	if err != nil {
+		return cp, errors.New("Error retrieving cp " + cpid)
+	}
+		
+	return cp, nil
+}
+
+
 func GetCompany(companyID string, stub *shim.ChaincodeStub) (Account, error){
 	var company Account
 	companyBytes, err := stub.GetState(accountPrefix+companyID);
@@ -487,6 +501,17 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 				return nil, err1
 			}	
 			return allCPsBytes, nil		 
+		}
+	} else if args[0] == "GetCP" {
+		cp, err := GetCP(args[1], stub);
+		if err != nil {
+			return nil, err
+		} else {
+			cpBytes, err1 := json.Marshal(&cp)
+			if err1 != nil {
+				return nil, err1
+			}	
+			return cpBytes, nil		 
 		}
 	} else if args[0] == "GetCompany" {
 		company, err := GetCompany(args[1], stub);
