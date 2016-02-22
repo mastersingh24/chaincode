@@ -187,6 +187,13 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
 
+	// Set the issuer to be the owner of all quantity
+	var owner Owner;
+	owner.Company = cp.Issuer
+	owner.Quantity = cp.Qty
+	
+	cp.Owners = append(cp.Owners, owner)
+
 	suffix, err := generateCUSIPSuffix(cp.IssueDate, cp.Maturity)
 
 	if err != nil {
@@ -274,14 +281,27 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 			  "CUSIP": "",
 			  "fromCompany":"",
 			  "toCompany":"",
-			  "
-
+			  "discount": 2.5 // in %
 		}
 	*/
 	//need one arg
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting commercial paper record")
 	}
+	
+/*	cpBytes, err := stub.GetState(cpPrefix+cp.CUSIP);
+	if err != nil {
+		return nil, errors.New("CUSIP not found " + CUSIP)
+	}
+
+	var cp CP
+	err = json.Unmarshal(cpBytes, &cp)
+	if err != nil {
+		return nil, errors.New("Error retrieving cp " + value)
+	}
+*/	
+//	for 
+
 	
 	return nil, nil;
 }
@@ -305,9 +325,11 @@ func (t *SimpleChaincode) Run(stub *shim.ChaincodeStub, function string, args []
 	// Handle different functions
 	// Handle different functions
 	if function == "issueCommercialPaper" {
+		fmt.Printf("Firing issueCommercialPaper");
 		//Create an asset with some value
 		return t.issueCommercialPaper(stub, args)
 	} else if function == "createAccounts" {
+		fmt.Printf("Firing createAccounts");
 		return t.createAccounts(stub, args)
 	}
 
