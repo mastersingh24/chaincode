@@ -270,11 +270,13 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 	// Get list of all the keys
 	keysBytes, err := stub.GetState("PaperKeys")
 	if err != nil {
+		fmt.Println("Error retrieving paper keys")
 		return nil, errors.New("Error retrieving paper keys")
 	}
 	var keys []string
 	err = json.Unmarshal(keysBytes, &keys)
 	if err != nil {
+		fmt.Println("Error unmarshalling paper keys")
 		return nil, errors.New("Error unmarshalling paper keys")
 	}
 
@@ -285,9 +287,11 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 		var cp CP
 		err = json.Unmarshal(cpBytes, &cp)
 		if err != nil {
+			fmt.Println("Error retrieving cp " + value)
 			return nil, errors.New("Error retrieving cp " + value)
 		}
 		
+		fmt.Println("Appending CP" + value)
 		allCPs = append(allCPs, cp)
 	}	
 	
@@ -295,13 +299,18 @@ func GetAllCPs(stub *shim.ChaincodeStub) ([]CP, error){
 }
 
 func GetCP(cpid string, stub *shim.ChaincodeStub) (CP, error){
-	
-	cpBytes, err := stub.GetState(cpid);
-		
 	var cp CP
+
+	cpBytes, err := stub.GetState(cpid);
+	if err != nil {
+		fmt.Println("Error retrieving cp " + cpid)
+		return cp, errors.New("Error retrieving cp " + cpid)
+	}
+		
 	err = json.Unmarshal(cpBytes, &cp)
 	if err != nil {
-		return cp, errors.New("Error retrieving cp " + cpid)
+		fmt.Println("Error unmarshalling cp " + cpid)
+		return cp, errors.New("Error unmarshalling cp " + cpid)
 	}
 		
 	return cp, nil
@@ -492,45 +501,60 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 	}
 
 	if args[0] == "GetAllCPs" {
+		fmt.Println("Getting all CPs");
 		allCPs, err := GetAllCPs(stub);
 		if err != nil {
+			fmt.Println("Error from getallcps");
 			return nil, err
 		} else {
 			allCPsBytes, err1 := json.Marshal(&allCPs)
 			if err1 != nil {
+				fmt.Println("Error marshalling allcps");
 				return nil, err1
 			}	
+			fmt.Println("All success, returning allcps");
 			return allCPsBytes, nil		 
 		}
 	} else if args[0] == "GetCP" {
+		fmt.Println("Getting particular cp");
 		cp, err := GetCP(args[1], stub);
 		if err != nil {
+			fmt.Println("Error Getting particular cp");
 			return nil, err
 		} else {
 			cpBytes, err1 := json.Marshal(&cp)
 			if err1 != nil {
+				fmt.Println("Error marshalling the cp");
 				return nil, err1
 			}	
+			fmt.Println("All success, returning the cp");
 			return cpBytes, nil		 
 		}
 	} else if args[0] == "GetCompany" {
+		fmt.Println("Getting the company");
 		company, err := GetCompany(args[1], stub);
 		if err != nil {
+			fmt.Println("Error from getCompany");
 			return nil, err
 		} else {
 			companyBytes, err1 := json.Marshal(&company)
 			if err1 != nil {
+				fmt.Println("Error marshalling the company");
 				return nil, err1
 			}	
+			fmt.Println("All success, returning the company");
 			return companyBytes, nil		 
 		}
 	} else {
+		fmt.Println("Generic Query call");
 		bytes, err := stub.GetState(args[0])
 
 		if err != nil {
+			fmt.Println("Some error happenend");
 			return nil, errors.New("Some Error happened")
 		}
 
+		fmt.Println("All success, returning from generic");
 		return bytes, nil		
 	}
 }
