@@ -45,9 +45,9 @@ func generateCUSIPSuffix(issueDate string, days int) (string, error) {
 		return "", err
 	}
 
-	t.AddDate(0, 0, days)
-	month := int(t.Month())
-	day := t.Day()
+	maturityDate := t.AddDate(0, 0, days)
+	month := int(maturityDate.Month())
+	day := maturityDate.Day()
 
 	suffix := seventhDigit[month] + eigthDigit[day]
 	return suffix, nil
