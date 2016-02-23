@@ -124,7 +124,8 @@ func (t *SimpleChaincode) createAccounts(stub *shim.ChaincodeStub, args []string
 		} else {
 			prefix = strconv.Itoa(counter) + suffix
 		}
-		account = Account{ID: "company" + strconv.Itoa(counter), Prefix: prefix, CashBalance: 10000000.0}
+		var assetIds []string
+		account = Account{ID: "company" + strconv.Itoa(counter), Prefix: prefix, CashBalance: 10000000.0, AssetsIds: assetIds}
 		accountBytes, err := json.Marshal(&account)
 		if err != nil {
 			fmt.Println("error creating account" + account.ID)
@@ -202,6 +203,8 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 		fmt.Println("Error Unmarshalling accountBytes");
 		return nil, errors.New("Error retrieving account " + cp.Issuer)
 	}
+	
+	account.AssetsIds = append(account.AssetsIds, cp.CUSIP)
 
 	// Set the issuer to be the owner of all quantity
 	var owner Owner;
@@ -216,11 +219,11 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 		return nil, errors.New("Error generating CUSIP")
 	}
 
-	fmt.Println("Error Unmarshalling accountBytes");
+	fmt.Println("Marshalling CP bytes");
 	cp.CUSIP = account.Prefix + suffix
 	cpBytes, err := json.Marshal(&cp)
 	if err != nil {
-		fmt.Println("Error unmarshel cp");
+		fmt.Println("Error marshalling cp");
 		return nil, errors.New("Error issuing commercial paper")
 	}
 	err = stub.PutState(cpPrefix+cp.CUSIP, cpBytes)
@@ -228,6 +231,19 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 		fmt.Println("Error issuing paper");
 		return nil, errors.New("Error issuing commercial paper")
 	}
+
+	fmt.Println("Marshalling account bytes to write");
+	accountBytesToWrite, err := json.Marshal(&account)
+	if err != nil {
+		fmt.Println("Error marshalling account");
+		return nil, errors.New("Error issuing commercial paper")
+	}
+	err = stub.PutState(accountPrefix + cp.Issuer, accountBytesToWrite)
+	if err != nil {
+		fmt.Println("Error putting state on accountBytesToWrite");
+		return nil, errors.New("Error issuing commercial paper")
+	}
+	
 	
 	// Update the paper keys by adding the new key
 	fmt.Println("Getting Paper Keys");
@@ -465,6 +481,8 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 		newOwner.Company = tr.ToCompany
 		cp.Owners = append(cp.Owners, newOwner)
 	}
+	
+	fromCompany.AssetsIds = append(fromCompany.AssetsIds, tr.CUSIP)
 
 	// Write everything back
 	// To Company
