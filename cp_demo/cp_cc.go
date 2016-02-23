@@ -462,15 +462,17 @@ func (t *SimpleChaincode) transferPaper(stub *shim.ChaincodeStub, args []string)
 	fromCompany.CashBalance += amountToBeTransferred
 
 	toOwnerFound := false
-	for _, owner := range cp.Owners {
+	for key, owner := range cp.Owners {
 		if owner.Company == tr.FromCompany {
 			fmt.Println("Reducing Quantity from the FromCompany")
-			owner.Quantity -= tr.Quantity
+			cp.Owners[key].Quantity -= tr.Quantity
+//			owner.Quantity -= tr.Quantity
 		}
 		if owner.Company == tr.ToCompany {
 			fmt.Println("Increasing Quantity from the ToCompany")
 			toOwnerFound = true
-			owner.Quantity += tr.Quantity
+			cp.Owners[key].Quantity += tr.Quantity
+//			owner.Quantity += tr.Quantity
 		}
 	}
 	
