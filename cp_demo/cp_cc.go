@@ -260,19 +260,27 @@ func (t *SimpleChaincode) issueCommercialPaper(stub *shim.ChaincodeStub, args []
 	}
 	
 	fmt.Println("Appending the new key to Paper Keys");
-	keys = append(keys, cpPrefix+cp.CUSIP);
-	keysBytesToWrite, err := json.Marshal(&keys)
-	if err != nil {
-		fmt.Println("Error marshalling keys");
-		return nil, errors.New("Error marshalling the keys")
+	foundKey := false
+	for _, key := range keys {
+		if key == cpPrefix+cp.CUSIP {
+			foundKey = true
+		}
 	}
-	fmt.Println("Put state on PaperKeys");
-	err = stub.PutState("PaperKeys", keysBytesToWrite)
-	if err != nil {
-		fmt.Println("Error writting keys back");
-		return nil, errors.New("Error writing the keys back")
+	if foundKey == false {
+		keys = append(keys, cpPrefix+cp.CUSIP);		
+		keysBytesToWrite, err := json.Marshal(&keys)
+		if err != nil {
+			fmt.Println("Error marshalling keys");
+			return nil, errors.New("Error marshalling the keys")
+		}
+		fmt.Println("Put state on PaperKeys");
+		err = stub.PutState("PaperKeys", keysBytesToWrite)
+		if err != nil {
+			fmt.Println("Error writting keys back");
+			return nil, errors.New("Error writing the keys back")
+		}
 	}
-
+	
 	fmt.Println("Issue commercial paper %+v\n", cp)
 	return nil, nil
 
